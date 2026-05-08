@@ -14,12 +14,26 @@ export default function MyTeam() {
     const fetchTeam = async () => {
       setLoading(true)
       try {
-        if (internData?.team?._id || internData?.team) {
-          const teamId = internData?.team?._id || internData?.team
+        const teamId = internData?.team?._id || internData?.team
+        if (teamId) {
+          // Intern has a team reference — fetch it directly
           const { data } = await api.get(`/teams/${teamId}`)
           setTeam(data.data)
+        } else {
+          // Fallback: scan all teams and find one this intern is a member of
+          const { data } = await api.get('/teams')
+          const internId = internData?._id
+          const myTeam = data.data?.find(t =>
+            t.members?.some(m => (m._id || m) === internId) ||
+            (t.leader?._id || t.leader) === internId
+          )
+          setTeam(myTeam || null)
         }
-      } catch {} finally { setLoading(false) }
+      } catch (e) {
+        console.error('MyTeam fetch error:', e)
+      } finally {
+        setLoading(false)
+      }
     }
     fetchTeam()
   }, [internData])
@@ -42,7 +56,8 @@ export default function MyTeam() {
     </div>
   )
 
-  const isLeader = team.leader?._id === internData?._id
+  const internId = internData?._id
+  const isLeader = (team.leader?._id || team.leader) === internId
 
   return (
     <div className="space-y-5">
@@ -82,37 +97,38 @@ export default function MyTeam() {
             <UsersRound size={16} className="text-primary-500" /> Members
           </h3>
           <div className="space-y-3">
-            {team.members?.length === 0
+            {!team.members || team.members.length === 0
               ? <p className="text-sm text-slate-400">No members yet.</p>
-              : team.members?.map((member, i) => (
-              <motion.div key={member._id} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
-                className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-dark-700/50 hover:bg-slate-100 dark:hover:bg-dark-600/50 transition-colors">
-                <div className="w-9 h-9 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold text-sm flex-shrink-0">
-                  {member.user?.name?.[0]?.toUpperCase() || <User size={14} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-slate-800 dark:text-white text-sm truncate">{member.user?.name}</p>
-                    {team.leader?._id === member._id && (
-                      <Crown size={11} className="text-amber-500 flex-shrink-0" />
+              : team.members.map((member, i) => (
+                <motion.div key={member._id || i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-dark-700/50 hover:bg-slate-100 dark:hover:bg-dark-600/50 transition-colors">
+                  <div className="w-9 h-9 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold text-sm flex-shrink-0">
+                    {member.user?.name?.[0]?.toUpperCase() || <User size={14} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-slate-800 dark:text-white text-sm truncate">{member.user?.name}</p>
+                      {(team.leader?._id || team.leader) === member._id && (
+                        <Crown size={11} className="text-amber-500 flex-shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400 truncate">{member.department}</p>
+                  </div>
+                  <div className="hidden sm:flex flex-col items-end gap-1">
+                    {member.user?.email && (
+                      <span className="flex items-center gap-1 text-xs text-slate-400">
+                        <Mail size={10} />{member.user.email}
+                      </span>
+                    )}
+                    {member.user?.phone && (
+                      <span className="flex items-center gap-1 text-xs text-slate-400">
+                        <Phone size={10} />{member.user.phone}
+                      </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 truncate">{member.department}</p>
-                </div>
-                <div className="hidden sm:flex flex-col items-end gap-1">
-                  {member.user?.email && (
-                    <span className="flex items-center gap-1 text-xs text-slate-400">
-                      <Mail size={10} />{member.user.email}
-                    </span>
-                  )}
-                  {member.user?.phone && (
-                    <span className="flex items-center gap-1 text-xs text-slate-400">
-                      <Phone size={10} />{member.user.phone}
-                    </span>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            }
           </div>
         </div>
 
