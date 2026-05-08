@@ -36,16 +36,25 @@ export default function Interns() {
   const onCreateIntern = async (formData) => {
     setSaving(true)
     try {
-      const payload = new FormData()
-      Object.entries(formData).forEach(([k, v]) => payload.append(k, v))
-      payload.set('techStack', JSON.stringify(formData.techStack ? [formData.techStack] : []))
-      payload.set('college', JSON.stringify({ name: formData.collegeName, degree: formData.degree }))
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        department: formData.department,
+        techStack: JSON.stringify(formData.techStack ? [formData.techStack] : []),
+        college: JSON.stringify({ name: formData.collegeName, degree: formData.degree }),
+        internshipStart: formData.internshipStart,
+        internshipEnd: formData.internshipEnd,
+        mentor: formData.mentor,
+      }
       await api.post('/interns', payload)
       toast.success('Intern created successfully')
       setCreateModal(false)
       reset()
       fetchInterns()
-    } catch {} finally { setSaving(false) }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to create intern')
+    } finally { setSaving(false) }
   }
 
   const handleDelete = async (id) => {

@@ -37,13 +37,20 @@ exports.createIntern = async (req, res) => {
   try {
     const { name, email, password, phone, department, techStack, college, internshipStart, internshipEnd, mentor, stipend } = req.body;
 
+    if (!name || !email || !department || !internshipStart || !internshipEnd) {
+      return res.status(400).json({ success: false, message: 'Name, email, department, internshipStart and internshipEnd are required' });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ success: false, message: 'Email already exists' });
 
+    const parsedTechStack = typeof techStack === 'string' ? JSON.parse(techStack || '[]') : (techStack || []);
+    const parsedCollege = typeof college === 'string' ? JSON.parse(college || '{}') : (college || {});
+
     const user = await User.create({ name, email, password: password || 'Intern@123', phone, role: 'intern' });
     const intern = await Intern.create({
-      user: user._id, department, techStack: JSON.parse(techStack || '[]'),
-      college: JSON.parse(college || '{}'), internshipStart, internshipEnd, mentor, stipend
+      user: user._id, department, techStack: parsedTechStack,
+      college: parsedCollege, internshipStart, internshipEnd, mentor, stipend
     });
 
     await emailService.sendWelcomeEmail(email, name, email, password || 'Intern@123');
