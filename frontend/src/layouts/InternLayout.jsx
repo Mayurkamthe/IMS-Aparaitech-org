@@ -7,6 +7,7 @@ const internNav = [
   { label: 'Dashboard', path: '/intern', icon: 'LayoutDashboard', exact: true },
   { label: 'My Tasks', path: '/intern/tasks', icon: 'CheckSquare' },
   { label: 'Projects', path: '/intern/projects', icon: 'FolderKanban' },
+  { label: 'My Team', path: '/intern/team', icon: 'UsersRound' },
   { label: 'Attendance', path: '/intern/attendance', icon: 'Clock' },
   { label: 'Certificates', path: '/intern/certificates', icon: 'Award' },
   { label: 'Support', path: '/intern/tickets', icon: 'LifeBuoy' },

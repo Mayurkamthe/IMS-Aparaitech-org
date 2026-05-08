@@ -37,6 +37,7 @@ import MyAttendance from './pages/intern/MyAttendance'
 import MyProfile from './pages/intern/MyProfile'
 import MyCertificates from './pages/intern/MyCertificates'
 import MyTickets from './pages/intern/MyTickets'
+import MyTeam from './pages/intern/MyTeam'
 
 import Loader from './components/common/Loader'
 import toast from 'react-hot-toast'
@@ -111,6 +112,7 @@ export default function App() {
           <Route path="profile" element={<MyProfile />} />
           <Route path="certificates" element={<MyCertificates />} />
           <Route path="tickets" element={<MyTickets />} />
+          <Route path="team" element={<MyTeam />} />
         </Route>
 
         <Route path="/" element={<Navigate to={token ? (user?.role === 'admin' ? '/admin' : '/intern') : '/login'} replace />} />

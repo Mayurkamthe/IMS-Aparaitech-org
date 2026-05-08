@@ -14,6 +14,17 @@ router.get('/', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+router.get('/:id', async (req, res) => {
+  try {
+    const team = await Team.findById(req.params.id)
+      .populate({ path: 'members', populate: { path: 'user', select: 'name avatar email phone' } })
+      .populate({ path: 'leader', populate: { path: 'user', select: 'name avatar' } })
+      .populate('projects', 'title status progress');
+    if (!team) return res.status(404).json({ success: false, message: 'Team not found' });
+    res.json({ success: true, data: team });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
 router.post('/', authorize('admin'), async (req, res) => {
   try {
     const team = await Team.create({ ...req.body, createdBy: req.user._id });
