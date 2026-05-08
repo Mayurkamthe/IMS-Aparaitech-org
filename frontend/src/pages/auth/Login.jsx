@@ -12,6 +12,7 @@ export default function Login() {
   const navigate = useNavigate()
   const { loading, error, user, token } = useSelector(s => s.auth)
   const [showPwd, setShowPwd] = useState(false)
+  const [role, setRole] = useState('admin')
   const { register, handleSubmit, formState: { errors } } = useForm()
 
   useEffect(() => {
@@ -48,8 +49,14 @@ export default function Login() {
 
           {/* Role tabs */}
           <div className="grid grid-cols-2 bg-dark-800 rounded-lg p-1 mb-6 gap-1">
-            <div className="py-2 px-4 rounded-md bg-primary-600 text-white text-sm font-medium text-center">Admin</div>
-            <div className="py-2 px-4 rounded-md text-slate-400 text-sm font-medium text-center">Intern</div>
+            <button type="button" onClick={() => setRole('admin')}
+              className={`py-2 px-4 rounded-md text-sm font-medium text-center transition-colors ${role === 'admin' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+              Admin
+            </button>
+            <button type="button" onClick={() => setRole('intern')}
+              className={`py-2 px-4 rounded-md text-sm font-medium text-center transition-colors ${role === 'intern' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
+              Intern
+            </button>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -59,7 +66,7 @@ export default function Login() {
                 <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input {...register('email', { required: 'Email required', pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email' } })}
                   className="input pl-9 bg-dark-800 border-dark-600 text-white placeholder:text-slate-500 focus:ring-primary-500"
-                  placeholder="admin@company.com" type="email" />
+                  placeholder={role === 'admin' ? 'admin@company.com' : 'intern@company.com'} type="email" />
               </div>
               {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
             </div>
@@ -93,13 +100,16 @@ export default function Login() {
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Signing in...
                 </span>
-              ) : 'Sign In'}
+              ) : `Sign In as ${role === 'admin' ? 'Admin' : 'Intern'}`}
             </button>
           </form>
 
           <div className="mt-6 pt-5 border-t border-dark-600">
             <p className="text-center text-xs text-slate-500">
-              Demo Admin: <span className="text-slate-300">admin@company.com</span> / <span className="text-slate-300">Admin@123</span>
+              {role === 'admin'
+                ? <>Demo Admin: <span className="text-slate-300">admin@company.com</span> / <span className="text-slate-300">Admin@123</span></>
+                : <>Default password: <span className="text-slate-300">Intern@123</span> (change after login)</>
+              }
             </p>
           </div>
         </div>

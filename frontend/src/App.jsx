@@ -42,9 +42,11 @@ import Loader from './components/common/Loader'
 import toast from 'react-hot-toast'
 
 const ProtectedRoute = ({ children, role }) => {
-  const { user, token } = useSelector(s => s.auth)
+  const { user, token, initialized } = useSelector(s => s.auth)
   if (!token) return <Navigate to="/login" replace />
-  if (role && user?.role !== role) return <Navigate to={user?.role === 'admin' ? '/admin' : '/intern'} replace />
+  if (!initialized) return null
+  if (!user) return <Navigate to="/login" replace />
+  if (role && user.role !== role) return <Navigate to={user.role === 'admin' ? '/admin' : '/intern'} replace />
   return children
 }
 
