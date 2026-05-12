@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { CheckSquare, Clock, Award, Bell, TrendingUp, Calendar, AlertTriangle } from 'lucide-react'
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
-import { StatCard, Badge, Skeleton } from '../../components/common/index'
+import { CheckSquare, Clock, Award, TrendingUp, Calendar, AlertCircle, Play, BookOpen } from 'lucide-react'
+import { RadialBarChart, RadialBar, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
+import { StatCard, Badge, Skeleton, Empty } from '../../components/common/index'
 import api from '../../services/api'
 import { motion } from 'framer-motion'
+import { COMPANY_NAME } from '../../utils/constants'
 
-export default function InternDashboard() {
-  const [data, setData] = useState(null)
+export default function StudentDashboard() {
+  const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -14,118 +15,175 @@ export default function InternDashboard() {
   }, [])
 
   if (loading) return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-pulse">
+      <div className="h-36 rounded-2xl bg-zinc-200 dark:bg-zinc-800" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array(4).fill(0).map((_, i) => <div key={i} className="card p-5"><Skeleton lines={3} /></div>)}
+        {Array(4).fill(0).map((_,i) => <div key={i} className="card h-24" />)}
       </div>
     </div>
   )
 
-  const { intern, taskStats, todayAttendance, attendancePercent, upcomingDeadlines, internshipProgress } = data || {}
+  const { intern, taskStats, todayAttendance, attendancePercent, upcomingDeadlines, internshipProgress } = data||{}
 
-  const progressColor = internshipProgress >= 75 ? 'bg-emerald-500' : internshipProgress >= 50 ? 'bg-primary-500' : 'bg-amber-500'
+  const radialData = [{ name:'Progress', value: internshipProgress||0, fill:'#7c3aed' }]
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800 dark:text-white">Welcome back, {intern?.user?.name?.split(' ')[0]}</h1>
-          <p className="text-sm text-slate-400">{intern?.department} · {intern?.internId}</p>
-        </div>
-        <div className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-dark-700 rounded-xl px-4 py-2">
-          <div className={`w-2 h-2 rounded-full ${todayAttendance?.loginTime && !todayAttendance?.logoutTime ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-          <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{todayAttendance?.loginTime && !todayAttendance?.logoutTime ? 'Currently Online' : todayAttendance?.loginTime ? 'Checked Out' : 'Not Checked In'}</span>
+    <div className="space-y-6 max-w-screen-xl">
+      {/* Hero welcome */}
+      <div className="rounded-2xl overflow-hidden relative p-6 sm:p-8"
+           style={{ background:'linear-gradient(135deg,#2e1065 0%,#4c1d95 40%,#7c3aed 100%)' }}>
+        <div className="absolute inset-0 opacity-10"
+             style={{ backgroundImage:'linear-gradient(rgba(255,255,255,.2) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.2) 1px,transparent 1px)', backgroundSize:'32px 32px' }} />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div>
+            <p className="text-violet-300 text-sm font-medium mb-1">{COMPANY_NAME} Internship Program</p>
+            <h1 className="text-white font-bold text-2xl sm:text-3xl mb-1">
+              Welcome back, {intern?.user?.name?.split(' ')[0]}!
+            </h1>
+            <p className="text-violet-300 text-sm">{intern?.department} · {intern?.internId}</p>
+          </div>
+
+          {/* Circular progress */}
+          <div className="flex items-center gap-6 flex-shrink-0">
+            <div className="text-center">
+              <div className="relative w-24 h-24">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadialBarChart innerRadius="65%" outerRadius="95%" data={radialData} startAngle={90} endAngle={-270}>
+                    <RadialBar dataKey="value" cornerRadius={8} background={{ fill:'rgba(255,255,255,0.1)' }} />
+                  </RadialBarChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">{internshipProgress||0}%</span>
+                </div>
+              </div>
+              <p className="text-violet-300 text-xs mt-1">Program Progress</p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${todayAttendance?.loginTime && !todayAttendance?.logoutTime ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-500'}`} />
+                <span className="text-violet-200 text-xs">{todayAttendance?.loginTime && !todayAttendance?.logoutTime ? 'Online now' : todayAttendance?.loginTime ? 'Checked out' : 'Not checked in'}</span>
+              </div>
+              <div className="text-violet-200 text-xs">Attendance: <span className="text-white font-semibold">{attendancePercent||0}%</span></div>
+              <div className="text-violet-200 text-xs">Score: <span className="text-white font-semibold">{intern?.performanceScore||0}/100</span></div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Internship Progress */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-slate-800 dark:text-white">Internship Progress</h3>
-          <span className="text-sm font-bold text-primary-600">{internshipProgress}% Complete</span>
-        </div>
-        <div className="h-3 bg-slate-100 dark:bg-dark-600 rounded-full overflow-hidden">
-          <motion.div initial={{ width: 0 }} animate={{ width: `${internshipProgress}%` }} transition={{ duration: 1, delay: 0.3 }}
-            className={`h-full rounded-full ${progressColor}`} />
-        </div>
-        <div className="flex justify-between mt-2 text-xs text-slate-400">
-          <span>Start: {intern?.internshipStart ? new Date(intern.internshipStart).toLocaleDateString() : '—'}</span>
-          <span>End: {intern?.internshipEnd ? new Date(intern.internshipEnd).toLocaleDateString() : '—'}</span>
-        </div>
-      </motion.div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Tasks', value: taskStats?.myTasks, icon: CheckSquare, color: 'primary' },
-          { label: 'Pending', value: taskStats?.pendingTasks, icon: AlertTriangle, color: 'amber' },
-          { label: 'Approved', value: taskStats?.approvedTasks, icon: Award, color: 'green' },
-          { label: 'Attendance', value: `${attendancePercent}%`, icon: Clock, color: 'primary' },
-        ].map((s, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+          { label:'Total Tasks',     value:taskStats?.myTasks||0,       icon:CheckSquare, color:'violet' },
+          { label:'Pending',         value:taskStats?.pendingTasks||0,   icon:AlertCircle, color:'amber'  },
+          { label:'Approved',        value:taskStats?.approvedTasks||0,  icon:Award,       color:'green'  },
+          { label:'Attendance',      value:`${attendancePercent||0}%`,   icon:Clock,       color:'sky'    },
+        ].map((s,i) => (
+          <motion.div key={i} initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*.06 }}>
             <StatCard {...s} />
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upcoming Deadlines */}
-        <div className="card p-5">
-          <h3 className="font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Calendar size={16} />Upcoming Deadlines</h3>
+        <div className="lg:col-span-2 card p-5">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="font-bold text-zinc-900 dark:text-white">Upcoming Deadlines</h3>
+              <p className="text-xs text-zinc-400 mt-0.5">Tasks due in the next 7 days</p>
+            </div>
+            <Calendar size={18} className="text-zinc-400" />
+          </div>
           <div className="space-y-3">
             {upcomingDeadlines?.length > 0 ? upcomingDeadlines.map(task => {
-              const daysLeft = Math.ceil((new Date(task.dueDate) - new Date()) / (1000 * 60 * 60 * 24))
+              const daysLeft = Math.ceil((new Date(task.dueDate) - new Date()) / (1000*60*60*24))
+              const urgency = daysLeft <= 1 ? 'text-red-500 bg-red-50 dark:bg-red-950/30' : daysLeft <= 3 ? 'text-amber-600 bg-amber-50 dark:bg-amber-950/30' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
               return (
-                <div key={task._id} className="flex items-center justify-between py-2 border-b border-slate-50 dark:border-dark-600 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{task.title}</p>
-                    <p className="text-xs text-slate-400">{new Date(task.dueDate).toLocaleDateString()}</p>
+                <div key={task._id} className="flex items-center gap-4 p-3.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl">
+                  <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">
+                    <BookOpen size={16} className="text-violet-600 dark:text-violet-400" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-medium ${daysLeft <= 1 ? 'text-red-500' : daysLeft <= 3 ? 'text-amber-500' : 'text-emerald-500'}`}>{daysLeft}d left</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate">{task.title}</p>
+                    <p className="text-xs text-zinc-400">{new Date(task.dueDate).toLocaleDateString('en-US',{ month:'short', day:'numeric' })}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Badge status={task.priority} label={task.priority} />
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${urgency}`}>{daysLeft}d</span>
                   </div>
                 </div>
               )
-            }) : <p className="text-slate-400 text-sm">No upcoming deadlines</p>}
+            }) : <Empty title="No upcoming deadlines" description="You're all caught up!" icon={CheckSquare} />}
           </div>
         </div>
 
-        {/* Projects */}
-        <div className="card p-5">
-          <h3 className="font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><TrendingUp size={16} />My Projects</h3>
-          <div className="space-y-4">
-            {intern?.projects?.length > 0 ? intern.projects.map(p => (
-              <div key={p._id}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{p.title}</span>
-                  <Badge status={p.status} label={p.status} />
+        {/* Quick Stats sidebar */}
+        <div className="space-y-4">
+          {/* Internship timeline */}
+          <div className="card p-5">
+            <h3 className="font-bold text-zinc-900 dark:text-white mb-4 text-sm">Internship Timeline</h3>
+            <div className="space-y-3 text-xs">
+              {[
+                { label:'Start', value: intern?.internshipStart ? new Date(intern.internshipStart).toLocaleDateString() : '—', color:'text-emerald-600' },
+                { label:'End',   value: intern?.internshipEnd   ? new Date(intern.internshipEnd).toLocaleDateString()   : '—', color:'text-red-500'    },
+                { label:'Duration', value: intern?.internshipDuration || '—', color:'text-violet-600' },
+              ].map(item => (
+                <div key={item.label} className="flex justify-between">
+                  <span className="text-zinc-400">{item.label}</span>
+                  <span className={`font-semibold ${item.color}`}>{item.value}</span>
                 </div>
-                <div className="h-1.5 bg-slate-100 dark:bg-dark-600 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary-500 rounded-full transition-all" style={{ width: `${p.progress}%` }} />
-                </div>
-                <p className="text-xs text-slate-400 mt-1">{p.progress}% complete</p>
-              </div>
-            )) : <p className="text-slate-400 text-sm">No projects assigned yet</p>}
-          </div>
-        </div>
-      </div>
-
-      {/* Today Attendance */}
-      <div className="card p-5">
-        <h3 className="font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Clock size={16} />Today's Attendance</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            { label: 'Login Time', value: todayAttendance?.loginTime ? new Date(todayAttendance.loginTime).toLocaleTimeString() : 'Not checked in' },
-            { label: 'Logout Time', value: todayAttendance?.logoutTime ? new Date(todayAttendance.logoutTime).toLocaleTimeString() : '—' },
-            { label: 'Work Hours', value: todayAttendance?.workHours ? `${todayAttendance.workHours}h` : '—' },
-            { label: 'Status', value: <Badge status={todayAttendance?.status || 'absent'} label={todayAttendance?.status || 'absent'} /> },
-          ].map(item => (
-            <div key={item.label} className="bg-slate-50 dark:bg-dark-800 rounded-lg p-3 text-center">
-              <p className="text-xs text-slate-400 mb-1">{item.label}</p>
-              <div className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.value}</div>
+              ))}
             </div>
-          ))}
+            <div className="mt-4">
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-zinc-400">Progress</span>
+                <span className="font-bold text-violet-600">{internshipProgress||0}%</span>
+              </div>
+              <div className="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                <motion.div initial={{ width:0 }} animate={{ width:`${internshipProgress||0}%` }} transition={{ duration:1, delay:.4 }}
+                  className="h-full bg-violet-500 rounded-full" />
+              </div>
+            </div>
+          </div>
+
+          {/* Today's status */}
+          <div className="card p-5">
+            <h3 className="font-bold text-zinc-900 dark:text-white mb-4 text-sm">Today's Attendance</h3>
+            <div className="space-y-2.5 text-xs">
+              {[
+                { label:'Status',    value: <Badge status={todayAttendance?.status||'absent'} label={todayAttendance?.status||'absent'} /> },
+                { label:'Check In',  value: todayAttendance?.loginTime  ? new Date(todayAttendance.loginTime).toLocaleTimeString()  : '—' },
+                { label:'Check Out', value: todayAttendance?.logoutTime ? new Date(todayAttendance.logoutTime).toLocaleTimeString() : '—' },
+                { label:'Hours',     value: todayAttendance?.workHours  ? `${todayAttendance.workHours}h`                         : '—' },
+              ].map(item => (
+                <div key={item.label} className="flex justify-between items-center">
+                  <span className="text-zinc-400">{item.label}</span>
+                  <span className="font-semibold text-zinc-700 dark:text-zinc-300">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Projects */}
+          {intern?.projects?.length > 0 && (
+            <div className="card p-5">
+              <h3 className="font-bold text-zinc-900 dark:text-white mb-4 text-sm">My Projects</h3>
+              <div className="space-y-3">
+                {intern.projects.slice(0,3).map(p => (
+                  <div key={p._id}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="font-medium text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]">{p.title}</span>
+                      <Badge status={p.status} label={p.status} />
+                    </div>
+                    <div className="h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                      <div className="h-full bg-violet-500 rounded-full" style={{ width:`${p.progress}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

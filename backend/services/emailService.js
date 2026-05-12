@@ -31,7 +31,7 @@ const baseTemplate = (content) => `
 
 const send = async (to, subject, html) => {
   try {
-    await transporter.sendMail({ from: `"Internship LMS" <${process.env.EMAIL_USER}>`, to, subject, html });
+    await transporter.sendMail({ from: `process.env.COMPANY_NAME || "Internship LMS" <${process.env.EMAIL_USER}>`, to, subject, html });
   } catch (err) {
     console.error('Email error:', err.message);
   }
