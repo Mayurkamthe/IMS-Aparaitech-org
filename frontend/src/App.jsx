@@ -7,47 +7,42 @@ import { initSocket, disconnectSocket } from './socket/socket'
 import { addNotification, setNotifications } from './redux/slices/notificationSlice'
 import api from './services/api'
 
-// Layouts
 import AdminLayout from './layouts/AdminLayout'
 import InternLayout from './layouts/InternLayout'
 
-// Auth pages
-import Login from './pages/auth/Login'
+import Login          from './pages/auth/Login'
 import ForgotPassword from './pages/auth/ForgotPassword'
-import ResetPassword from './pages/auth/ResetPassword'
+import ResetPassword  from './pages/auth/ResetPassword'
 
-// Admin pages
 import AdminDashboard from './pages/admin/Dashboard'
-import Interns from './pages/admin/Interns'
-import InternDetail from './pages/admin/InternDetail'
-import Projects from './pages/admin/Projects'
-import Tasks from './pages/admin/Tasks'
-import Attendance from './pages/admin/Attendance'
-import Teams from './pages/admin/Teams'
-import Reports from './pages/admin/Reports'
-import Tickets from './pages/admin/Tickets'
-import Certificates from './pages/admin/Certificates'
-import AdminSettings from './pages/admin/Settings'
+import Interns        from './pages/admin/Interns'
+import InternDetail   from './pages/admin/InternDetail'
+import Projects       from './pages/admin/Projects'
+import Tasks          from './pages/admin/Tasks'
+import Attendance     from './pages/admin/Attendance'
+import Teams          from './pages/admin/Teams'
+import TeamDetail     from './pages/admin/TeamDetail'
+import Reports        from './pages/admin/Reports'
+import Tickets        from './pages/admin/Tickets'
+import Certificates   from './pages/admin/Certificates'
+import AdminSettings  from './pages/admin/Settings'
 
-// Intern pages
-import InternDashboard from './pages/intern/Dashboard'
-import MyTasks from './pages/intern/MyTasks'
-import MyProjects from './pages/intern/MyProjects'
-import MyAttendance from './pages/intern/MyAttendance'
-import MyProfile from './pages/intern/MyProfile'
-import MyCertificates from './pages/intern/MyCertificates'
-import MyTickets from './pages/intern/MyTickets'
-import MyTeam from './pages/intern/MyTeam'
+import InternDashboard  from './pages/intern/Dashboard'
+import MyTasks          from './pages/intern/MyTasks'
+import MyProjects       from './pages/intern/MyProjects'
+import MyTeam           from './pages/intern/MyTeam'
+import MyAttendance     from './pages/intern/MyAttendance'
+import MyProfile        from './pages/intern/MyProfile'
+import MyCertificates   from './pages/intern/MyCertificates'
+import MyTickets        from './pages/intern/MyTickets'
 
 import Loader from './components/common/Loader'
-import toast from 'react-hot-toast'
+import toast  from 'react-hot-toast'
 
 const ProtectedRoute = ({ children, role }) => {
-  const { user, token, initialized } = useSelector(s => s.auth)
+  const { user, token } = useSelector(s => s.auth)
   if (!token) return <Navigate to="/login" replace />
-  if (!initialized) return null
-  if (!user) return <Navigate to="/login" replace />
-  if (role && user.role !== role) return <Navigate to={user.role === 'admin' ? '/admin' : '/intern'} replace />
+  if (role && user?.role !== role) return <Navigate to={user?.role === 'admin' ? '/admin' : '/intern'} replace />
   return children
 }
 
@@ -70,49 +65,54 @@ export default function App() {
   useEffect(() => {
     if (!token || !user) return
     const socket = initSocket(token)
-
     socket.on('notification', (notif) => {
       dispatch(addNotification(notif))
-      toast(notif.title, { icon: null, style: { background: '#1e293b', color: '#f1f5f9', border: '1px solid #3b82f6' } })
+      toast(notif.title, { icon: null, style: { background:'#1e293b', color:'#f1f5f9', border:'1px solid #7c3aed' } })
     })
-
     api.get('/notifications').then(({ data }) => dispatch(setNotifications(data))).catch(() => {})
-
     return () => disconnectSocket()
   }, [user?._id])
 
-  if (!initialized) return <div className="flex h-screen items-center justify-center bg-dark-900"><Loader size="lg" /></div>
+  if (!initialized) return (
+    <div className="flex h-screen items-center justify-center bg-zinc-950">
+      <div className="text-center space-y-3">
+        <div className="w-10 h-10 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin mx-auto"/>
+        <p className="text-zinc-500 text-sm">Loading…</p>
+      </div>
+    </div>
+  )
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/login"                  element={<Login />} />
+        <Route path="/forgot-password"        element={<ForgotPassword />} />
+        <Route path="/reset-password/:token"  element={<ResetPassword />} />
 
         <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="interns" element={<Interns />} />
+          <Route index             element={<AdminDashboard />} />
+          <Route path="interns"    element={<Interns />} />
           <Route path="interns/:id" element={<InternDetail />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="tasks" element={<Tasks />} />
+          <Route path="projects"   element={<Projects />} />
+          <Route path="tasks"      element={<Tasks />} />
           <Route path="attendance" element={<Attendance />} />
-          <Route path="teams" element={<Teams />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="tickets" element={<Tickets />} />
+          <Route path="teams"      element={<Teams />} />
+          <Route path="teams/:id"  element={<TeamDetail />} />
+          <Route path="reports"    element={<Reports />} />
+          <Route path="tickets"    element={<Tickets />} />
           <Route path="certificates" element={<Certificates />} />
-          <Route path="settings" element={<AdminSettings />} />
+          <Route path="settings"   element={<AdminSettings />} />
         </Route>
 
         <Route path="/intern" element={<ProtectedRoute role="intern"><InternLayout /></ProtectedRoute>}>
-          <Route index element={<InternDashboard />} />
-          <Route path="tasks" element={<MyTasks />} />
-          <Route path="projects" element={<MyProjects />} />
-          <Route path="attendance" element={<MyAttendance />} />
-          <Route path="profile" element={<MyProfile />} />
+          <Route index               element={<InternDashboard />} />
+          <Route path="tasks"        element={<MyTasks />} />
+          <Route path="projects"     element={<MyProjects />} />
+          <Route path="team"         element={<MyTeam />} />
+          <Route path="attendance"   element={<MyAttendance />} />
+          <Route path="profile"      element={<MyProfile />} />
           <Route path="certificates" element={<MyCertificates />} />
-          <Route path="tickets" element={<MyTickets />} />
-          <Route path="team" element={<MyTeam />} />
+          <Route path="tickets"      element={<MyTickets />} />
         </Route>
 
         <Route path="/" element={<Navigate to={token ? (user?.role === 'admin' ? '/admin' : '/intern') : '/login'} replace />} />

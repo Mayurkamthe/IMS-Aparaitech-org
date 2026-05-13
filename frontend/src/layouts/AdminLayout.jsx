@@ -5,16 +5,16 @@ import Header  from '../components/layout/Header'
 import { motion } from 'framer-motion'
 
 const adminNav = [
-  { label:'Dashboard',   path:'/admin',              icon:'LayoutDashboard', exact:true },
-  { label:'Students',    path:'/admin/interns',       icon:'GraduationCap' },
-  { label:'Projects',    path:'/admin/projects',      icon:'FolderKanban' },
-  { label:'Tasks',       path:'/admin/tasks',         icon:'CheckSquare' },
-  { label:'Attendance',  path:'/admin/attendance',    icon:'CalendarCheck' },
-  { label:'Teams',       path:'/admin/teams',         icon:'UsersRound' },
-  { label:'Reports',     path:'/admin/reports',       icon:'BarChart3' },
-  { label:'Certificates',path:'/admin/certificates',  icon:'Award' },
-  { label:'Support',     path:'/admin/tickets',       icon:'LifeBuoy' },
-  { label:'Settings',    path:'/admin/settings',      icon:'Settings' },
+  { label:'Dashboard',    path:'/admin',               icon:'LayoutDashboard', exact:true },
+  { label:'Students',     path:'/admin/interns',       icon:'GraduationCap' },
+  { label:'Projects',     path:'/admin/projects',      icon:'FolderKanban' },
+  { label:'Tasks',        path:'/admin/tasks',         icon:'CheckSquare' },
+  { label:'Attendance',   path:'/admin/attendance',    icon:'CalendarCheck' },
+  { label:'Teams',        path:'/admin/teams',         icon:'MessagesSquare' },
+  { label:'Reports',      path:'/admin/reports',       icon:'BarChart3' },
+  { label:'Certificates', path:'/admin/certificates',  icon:'Award' },
+  { label:'Support',      path:'/admin/tickets',       icon:'LifeBuoy' },
+  { label:'Settings',     path:'/admin/settings',      icon:'Settings' },
 ]
 
 export default function AdminLayout() {
@@ -24,7 +24,7 @@ export default function AdminLayout() {
       <Sidebar nav={adminNav} role="admin" />
       <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''}`}>
         <Header />
-        <main className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-zinc-950">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-950">
           <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} transition={{ duration:.2 }}>
             <Outlet />
           </motion.div>
