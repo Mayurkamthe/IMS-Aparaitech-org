@@ -40,6 +40,8 @@ app.use('/api/tickets',       require('./routes/tickets'));
 app.use('/api/certificates',  require('./routes/certificates'));
 app.use('/api/reports',       require('./routes/reports'));
 app.use('/api/dashboard',     require('./routes/dashboard'));
+app.use('/api/domains',       require('./routes/domains'));
+app.use('/api/payments',      require('./routes/payments'));
 
 app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date() }));
 

@@ -26,6 +26,8 @@ import Reports        from './pages/admin/Reports'
 import Tickets        from './pages/admin/Tickets'
 import Certificates   from './pages/admin/Certificates'
 import AdminSettings  from './pages/admin/Settings'
+import Domains        from './pages/admin/Domains'
+import Revenue        from './pages/admin/Revenue'
 
 import InternDashboard  from './pages/intern/Dashboard'
 import MyTasks          from './pages/intern/MyTasks'
@@ -102,6 +104,8 @@ export default function App() {
           <Route path="tickets"    element={<Tickets />} />
           <Route path="certificates" element={<Certificates />} />
           <Route path="settings"   element={<AdminSettings />} />
+          <Route path="domains"    element={<Domains />} />
+          <Route path="revenue"    element={<Revenue />} />
         </Route>
 
         <Route path="/intern" element={<ProtectedRoute role="intern"><InternLayout /></ProtectedRoute>}>

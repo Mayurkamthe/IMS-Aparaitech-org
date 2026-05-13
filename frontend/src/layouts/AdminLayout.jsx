@@ -7,10 +7,12 @@ import { motion } from 'framer-motion'
 const adminNav = [
   { label:'Dashboard',    path:'/admin',               icon:'LayoutDashboard', exact:true },
   { label:'Students',     path:'/admin/interns',       icon:'GraduationCap' },
+  { label:'Domains',      path:'/admin/domains',       icon:'Layers' },
   { label:'Projects',     path:'/admin/projects',      icon:'FolderKanban' },
   { label:'Tasks',        path:'/admin/tasks',         icon:'CheckSquare' },
   { label:'Attendance',   path:'/admin/attendance',    icon:'CalendarCheck' },
   { label:'Teams',        path:'/admin/teams',         icon:'MessagesSquare' },
+  { label:'Revenue',      path:'/admin/revenue',       icon:'IndianRupee' },
   { label:'Reports',      path:'/admin/reports',       icon:'BarChart3' },
   { label:'Certificates', path:'/admin/certificates',  icon:'Award' },
   { label:'Support',      path:'/admin/tickets',       icon:'LifeBuoy' },
