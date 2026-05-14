@@ -142,3 +142,19 @@ router.get('/:id/files', async (req, res) => {
 });
 
 module.exports = router;
+
+// Ensure default channels exist (called when opening a team that has none)
+router.post('/:id/ensure-channels', async (req, res) => {
+  try {
+    const existing = await TeamChannel.countDocuments({ team: req.params.id });
+    if (existing === 0) {
+      await TeamChannel.insertMany([
+        { team: req.params.id, name: 'general',       description: 'General discussion', type: 'text',         isDefault: true, createdBy: req.user._id },
+        { team: req.params.id, name: 'announcements', description: 'Team announcements', type: 'announcement', isDefault: true, createdBy: req.user._id },
+        { team: req.params.id, name: 'resources',     description: 'Shared resources',   type: 'text',         isDefault: true, createdBy: req.user._id },
+      ]);
+    }
+    const channels = await TeamChannel.find({ team: req.params.id }).sort({ isDefault: -1, createdAt: 1 });
+    res.json({ success: true, data: channels });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
