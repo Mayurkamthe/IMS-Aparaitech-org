@@ -8,7 +8,7 @@ import {
   MessageSquare, Users, Video, Search, Wifi, WifiOff
 } from 'lucide-react'
 import api from '../../services/api'
-import { initSocket, waitForSocket } from '../../socket/socket'
+import { initSocket } from '../../socket/socket'
 import { Badge, Skeleton } from '../../components/common/index'
 import Modal from '../../components/common/Modal'
 import { useForm } from 'react-hook-form'
@@ -236,7 +236,7 @@ export default function AdminTeamDetail() {
     if (sock.connected) onConnect()
     else sock.on('connect', onConnect)
     sock.on('disconnect', () => setSocketReady(false))
-    sock.on('reconnect',  () => { setSocketReady(true); sock.emit('join_team',id); sock.emit('get_online_members',id) })
+    // reconnect handled via connect event re-fire
 
     return () => { sock.off('connect', onConnect); sock.emit('leave_team', id) }
   }, [id, user?._id])
@@ -255,20 +255,19 @@ export default function AdminTeamDetail() {
     const onOnline = ({members}) => setOnlineMembers(members.map(String))
     const onPresence = ({userId,status}) => { const s=String(userId); setOnlineMembers(p=>status==='online'?(p.includes(s)?p:[...p,s]):p.filter(u=>u!==s)) }
 
-    sock.on('new_message',msg); sock.on('message_edited',onEdit); sock.on('message_deleted',onDel)
+    sock.on('new_message',onMsg); sock.on('message_edited',onEdit); sock.on('message_deleted',onDel)
     sock.on('reaction_updated',onReact); sock.on('message_pinned',onPin)
     sock.on('user_typing',onType); sock.on('user_stop_typing',onStop)
     sock.on('online_members',onOnline); sock.on('presence_update',onPresence)
 
     // fix: rename conflict
-    const onMsg2 = onMsg
     return () => {
-      sock.off('new_message',onMsg2); sock.off('message_edited',onEdit); sock.off('message_deleted',onDel)
+      sock.off('new_message',onMsg); sock.off('message_edited',onEdit); sock.off('message_deleted',onDel)
       sock.off('reaction_updated',onReact); sock.off('message_pinned',onPin)
       sock.off('user_typing',onType); sock.off('user_stop_typing',onStop)
       sock.off('online_members',onOnline); sock.off('presence_update',onPresence)
     }
-  }, [socketRef.current, activeChannel, id, user?._id])
+  }, [socketReady, activeChannel, id, user?._id])
 
   // ── Load messages ────────────────────────────────────────────
   useEffect(() => {
