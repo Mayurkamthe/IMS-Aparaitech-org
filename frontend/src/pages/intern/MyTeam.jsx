@@ -244,6 +244,7 @@ export default function MyTeam() {
   const [sidebarOpen,   setSidebarOpen]   = useState(true)
   const [socketReady,   setSocketReady]   = useState(false)
   const [error,         setError]         = useState(null)
+  const [lockedChannels,setLockedChannels]= useState({})
 
   const bottomRef    = useRef(null)
   const typingTimer  = useRef(null)
@@ -267,6 +268,7 @@ export default function MyTeam() {
         const chs = chRes.data.data || []
         setChannels(chs)
         // set default active channel
+        const lockMap = {}; chs.forEach(c => { lockMap[c.name] = c.isLocked||false }); setLockedChannels(lockMap)
         const defaultCh = chs.find(c => c.name === 'general') || chs[0]
         if (defaultCh) setActiveChannel(defaultCh.name)
       } catch (e) {
@@ -338,6 +340,16 @@ export default function MyTeam() {
 
     const onOnlineMembers  = ({ members })         => setOnlineMembers(members.map(String))
     const onMemberOnline   = ({ userId })          => setOnlineMembers(prev => { const s = String(userId); return prev.includes(s) ? prev : [...prev, s] })
+    sock.on('channel_locked', (d) => {
+      toast.error(d.message || 'This channel is locked by admin')
+    })
+    sock.on('channel_lock_changed', ({channelName, isLocked}) => {
+      setLockedChannels(p => ({...p, [channelName]: isLocked}))
+      setChannels(p => p.map(c => c.name===channelName ? {...c, isLocked} : c))
+      if (isLocked) toast(`#${channelName} has been locked by admin`, {icon:'🔒'})
+      else toast(`#${channelName} is now open for everyone`, {icon:'🔓'})
+    })
+
     const onPresenceUpdate = ({ userId, status }) => {
       const s = String(userId)
       setOnlineMembers(prev => status === 'online' ? (prev.includes(s) ? prev : [...prev, s]) : prev.filter(id => id !== s))
@@ -360,7 +372,9 @@ export default function MyTeam() {
       sock.off('message_deleted', onDeleted)
       sock.off('reaction_updated',onReaction)
       sock.off('message_pinned',  onPinned)
-      sock.off('user_typing',     onTypingStart)
+      sock.off('channel_locked')
+    sock.off('channel_lock_changed')
+    sock.off('user_typing',     onTypingStart)
       sock.off('user_stop_typing',onTypingStop)
       sock.off('online_members',  onOnlineMembers)
       sock.off('member_online',   onMemberOnline)
@@ -616,6 +630,7 @@ export default function MyTeam() {
             <div className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
               {CH_ICON[channels.find(c => c.name === activeChannel)?.type] || <Hash size={16} />}
               <span className="font-bold text-sm">{activeChannel}</span>
+              {lockedChannels[activeChannel] && <span className="flex items-center gap-1 ml-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-full"><Lock size={10}/>Locked</span>}
             </div>
             {typingUsers.length > 0 && (
               <span className="text-xs text-violet-500 italic animate-pulse ml-2">
@@ -780,7 +795,7 @@ export default function MyTeam() {
               value={input}
               onChange={e => handleTyping(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-              placeholder={`Message #${activeChannel}…`}
+              placeholder={lockedChannels[activeChannel] ? `#${activeChannel} is locked by admin` : `Message #${activeChannel}…`}
               rows={1}
               className="flex-1 bg-transparent text-sm text-zinc-800 dark:text-zinc-200 outline-none resize-none placeholder:text-zinc-400 leading-5 max-h-28 overflow-y-auto py-1"
             />

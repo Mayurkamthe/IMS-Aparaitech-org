@@ -32,6 +32,7 @@ const teamChannelSchema = new mongoose.Schema({
   type:        { type: String, enum: ['text','announcement'], default: 'text' },
   createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   isDefault:   { type: Boolean, default: false },
+  isLocked:    { type: Boolean, default: false }, // only admin can post when true
 }, { timestamps: true });
 
 module.exports = {

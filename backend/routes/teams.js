@@ -158,3 +158,20 @@ router.post('/:id/ensure-channels', async (req, res) => {
     res.json({ success: true, data: channels });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
+
+// Toggle channel lock (admin only)
+router.put('/:id/channels/:channelId/lock', authorize('admin'), async (req, res) => {
+  try {
+    const channel = await TeamChannel.findById(req.params.channelId);
+    if (!channel) return res.status(404).json({ success: false, message: 'Channel not found' });
+    channel.isLocked = !channel.isLocked;
+    await channel.save();
+    // Notify team members via socket
+    const io = req.app.get('io');
+    io?.to(`team_${req.params.id}`).emit('channel_lock_changed', {
+      channelName: channel.name,
+      isLocked: channel.isLocked
+    });
+    res.json({ success: true, data: channel });
+  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+});

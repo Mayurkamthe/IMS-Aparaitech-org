@@ -5,7 +5,7 @@ import {
   ArrowLeft, Hash, Volume2, Plus, Send, Paperclip, Smile,
   Pin, X, Edit3, Trash2, Crown, ChevronRight, FolderOpen,
   Download, FileText, Archive, Image as ImageIcon,
-  MessageSquare, Users, Video, Search, Wifi, WifiOff
+  MessageSquare, Users, Video, Search, Wifi, WifiOff, Lock, Unlock, ShieldAlert
 } from 'lucide-react'
 import api from '../../services/api'
 import { initSocket } from '../../socket/socket'
@@ -196,6 +196,7 @@ export default function AdminTeamDetail() {
   const [newChannel,  setNewChannel]  = useState('')
   const [socketReady, setSocketReady] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [lockedChannels, setLockedChannels] = useState({}) // channelName -> bool
   const { register, handleSubmit, reset } = useForm()
   const bottomRef   = useRef(null)
   const fileInputRef= useRef(null)
@@ -214,6 +215,10 @@ export default function AdminTeamDetail() {
         setTeam(tRes.data.data)
         const chs = chRes.data.data || []
         setChannels(chs)
+        // build locked map
+        const lockMap = {}
+        chs.forEach(c => { lockMap[c.name] = c.isLocked||false })
+        setLockedChannels(lockMap)
         setActiveChannel(chs.find(c=>c.name==='general')?.name || chs[0]?.name || 'general')
       } catch { toast.error('Failed to load team') } finally { setLoading(false) }
     }
@@ -245,7 +250,7 @@ export default function AdminTeamDetail() {
   useEffect(() => {
     const sock = socketRef.current
     if (!sock) return
-    const onMsg  = (msg) => { if(msg.channel===activeChannel && msg.team?.toString()===id) setMessages(p=>p.find(m=>m._id===msg._id)?p:[...p,msg]) }
+    const onMsg  = (msg) => { if(msg.channel===activeChannel) setMessages(p=>p.find(m=>m._id===msg._id)?p:[...p,msg]) }
     const onEdit = (msg) => setMessages(p=>p.map(m=>m._id===msg._id?{...m,...msg}:m))
     const onDel  = ({messageId}) => setMessages(p=>p.map(m=>m._id===messageId?{...m,deletedAt:new Date(),content:'',attachments:[]}:m))
     const onReact= ({messageId,reactions}) => setMessages(p=>p.map(m=>m._id===messageId?{...m,reactions}:m))
@@ -258,6 +263,12 @@ export default function AdminTeamDetail() {
     sock.on('new_message',onMsg); sock.on('message_edited',onEdit); sock.on('message_deleted',onDel)
     sock.on('reaction_updated',onReact); sock.on('message_pinned',onPin)
     sock.on('user_typing',onType); sock.on('user_stop_typing',onStop)
+    const onLockChanged = ({channelName, isLocked}) => {
+      setLockedChannels(p => ({...p, [channelName]: isLocked}))
+      setChannels(p => p.map(c => c.name===channelName ? {...c, isLocked} : c))
+    }
+    sock.on('channel_locked',    (d) => toast.error(d.message||'Channel is locked'))
+    sock.on('channel_lock_changed', onLockChanged)
     sock.on('online_members',onOnline); sock.on('presence_update',onPresence)
 
     // fix: rename conflict
@@ -265,6 +276,8 @@ export default function AdminTeamDetail() {
       sock.off('new_message',onMsg); sock.off('message_edited',onEdit); sock.off('message_deleted',onDel)
       sock.off('reaction_updated',onReact); sock.off('message_pinned',onPin)
       sock.off('user_typing',onType); sock.off('user_stop_typing',onStop)
+      sock.off('channel_locked')
+      sock.off('channel_lock_changed', onLockChanged)
       sock.off('online_members',onOnline); sock.off('presence_update',onPresence)
     }
   }, [socketReady, activeChannel, id, user?._id])
@@ -286,6 +299,16 @@ export default function AdminTeamDetail() {
     socketRef.current?.emit('typing_start',{teamId:id,name:user?.name,channel:activeChannel})
     clearTimeout(typingTimer.current)
     typingTimer.current = setTimeout(()=>{ socketRef.current?.emit('typing_stop',{teamId:id,channel:activeChannel}); setTypingUsers([]) }, 1500)
+  }
+
+  const toggleChannelLock = async (ch) => {
+    try {
+      const r = await api.put(`/teams/${id}/channels/${ch._id}/lock`)
+      const newLocked = r.data.data.isLocked
+      setLockedChannels(p => ({...p, [ch.name]: newLocked}))
+      setChannels(p => p.map(c => c._id===ch._id ? {...c, isLocked: newLocked} : c))
+      toast.success(`#${ch.name} ${newLocked ? 'locked — only admin can post' : 'unlocked — everyone can post'}`)
+    } catch { toast.error('Failed to toggle lock') }
   }
 
   const sendMessage = async () => {
@@ -378,7 +401,8 @@ export default function AdminTeamDetail() {
                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg mx-1 transition-all ${activeChannel===ch.name?'bg-zinc-700 text-white':'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'}`}
                     style={{width:'calc(100% - 8px)'}}>
                     <span className="flex-shrink-0">{CH_ICON[ch.type]||<Hash size={14}/>}</span>
-                    <span className="truncate">{ch.name}</span>
+                    <span className="truncate flex-1">{ch.name}</span>
+                    {lockedChannels[ch.name] && <Lock size={10} className="flex-shrink-0 text-amber-400 ml-1"/>}
                   </button>
                 ))}
 
@@ -441,6 +465,11 @@ export default function AdminTeamDetail() {
             <div className="flex items-center gap-1">
               <button onClick={()=>{setShowPinned(!showPinned);setShowFiles(false)}} className={`p-2 rounded-lg transition-colors ${showPinned?'bg-amber-100 dark:bg-amber-950/30 text-amber-600':'text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300'}`} title="Pinned"><Pin size={16}/></button>
               <button onClick={()=>{setShowFiles(!showFiles);setShowPinned(false)}} className={`p-2 rounded-lg transition-colors ${showFiles?'bg-violet-100 dark:bg-violet-950/30 text-violet-600':'text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300'}`} title="Files"><FolderOpen size={16}/></button>
+              <button onClick={()=>{ const ch=channels.find(c=>c.name===activeChannel); if(ch) toggleChannelLock(ch) }}
+                className={`p-2 rounded-lg transition-colors ${lockedChannels[activeChannel]?'bg-amber-100 dark:bg-amber-950/30 text-amber-600':'text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
+                title={lockedChannels[activeChannel]?'Unlock channel (allow all)':'Lock channel (admin only)'}>
+                {lockedChannels[activeChannel] ? <Lock size={16}/> : <Unlock size={16}/>}
+              </button>
             </div>
           </div>
 
@@ -549,7 +578,7 @@ export default function AdminTeamDetail() {
                 {uploading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/> : <Send size={15}/>}
               </button>
             </div>
-            <p className="text-xs text-zinc-400 mt-1.5 px-1">Admin messages appear with indigo bubble · Enter to send</p>
+            <p className="text-xs text-zinc-400 mt-1.5 px-1">{lockedChannels[activeChannel] ? <span className="text-amber-600">Channel locked — students cannot post here</span> : "Admin messages appear with indigo bubble"} · Enter to send</p>
           </div>
         </div>
 

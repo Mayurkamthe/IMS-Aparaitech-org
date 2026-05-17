@@ -50,7 +50,16 @@ module.exports = (io) => {
     socket.on('team_message', async (data) => {
       try {
         const User = require('../models/User');
-        const sender = await User.findById(uid).select('name avatar role');
+        const { TeamChannel } = require('../models/TeamChat');
+
+        // Check channel lock — only admin can post in locked channels
+        const channel = await TeamChannel.findOne({ team: data.teamId, name: data.channel || 'general' });
+        const sender  = await User.findById(uid).select('name avatar role');
+        if (channel?.isLocked && sender?.role !== 'admin') {
+          socket.emit('channel_locked', { channel: data.channel, message: 'This channel is locked. Only admin can post.' });
+          return;
+        }
+
         const msg = await TeamMessage.create({
           team:    data.teamId,
           channel: data.channel || 'general',
