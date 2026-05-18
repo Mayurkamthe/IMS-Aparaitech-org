@@ -104,3 +104,37 @@ module.exports = {
     </div>
     <div class="footer"><p>This is an automated message.</p></div>`))
 };
+
+module.exports.sendPaymentAssigned = (email, name, payment) =>
+  send(email, `Payment Due: ${payment.title}`, baseTemplate(`
+    <div class="header"><h1>Payment Required</h1><p>${process.env.COMPANY_NAME||'Internship LMS'}</p></div>
+    <div class="body">
+      <h2>Hello, ${name}!</h2>
+      <p>A new payment has been assigned to your account:</p>
+      <div class="credentials">
+        <p>Title: <span>${payment.title}</span></p>
+        <p>Amount: <span>₹${payment.amount.toLocaleString()}</span></p>
+        <p>Invoice: <span>${payment.invoiceNumber}</span></p>
+        ${payment.dueDate ? `<p>Due Date: <span>${new Date(payment.dueDate).toDateString()}</span></p>` : ''}
+        ${payment.description ? `<p>Details: <span>${payment.description}</span></p>` : ''}
+      </div>
+      <a href="${process.env.CLIENT_URL}/intern/payments" class="cta">Pay Now</a>
+    </div>
+    <div class="footer"><p>Secure payment powered by Razorpay.</p></div>`));
+
+module.exports.sendPaymentReceipt = (email, name, payment) =>
+  send(email, `Payment Confirmed: ${payment.title}`, baseTemplate(`
+    <div class="header"><h1>Payment Successful</h1><p>${process.env.COMPANY_NAME||'Internship LMS'}</p></div>
+    <div class="body">
+      <h2>Hello, ${name}!</h2>
+      <p>Your payment has been received successfully.</p>
+      <div class="credentials">
+        <p>Title: <span>${payment.title}</span></p>
+        <p>Amount Paid: <span>₹${payment.amount.toLocaleString()}</span></p>
+        <p>Invoice: <span>${payment.invoiceNumber}</span></p>
+        <p>Transaction ID: <span>${payment.transactionId||payment.razorpayPaymentId||'—'}</span></p>
+        <p>Date: <span>${new Date(payment.paidDate||Date.now()).toDateString()}</span></p>
+      </div>
+      <p>Thank you for your payment. You can now access the project resources.</p>
+    </div>
+    <div class="footer"><p>Keep this email as your payment receipt.</p></div>`));

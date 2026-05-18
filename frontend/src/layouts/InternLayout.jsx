@@ -11,6 +11,7 @@ const internNav = [
   { label:'Team',         path:'/intern/team',         icon:'MessagesSquare' },
   { label:'Attendance',   path:'/intern/attendance',   icon:'CalendarCheck' },
   { label:'Certificates', path:'/intern/certificates', icon:'Award' },
+  { label:'Payments',     path:'/intern/payments',     icon:'CreditCard' },
   { label:'Support',      path:'/intern/tickets',      icon:'LifeBuoy' },
   { label:'My Profile',   path:'/intern/profile',      icon:'User' },
 ]

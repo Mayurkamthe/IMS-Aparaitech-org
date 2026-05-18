@@ -13,6 +13,7 @@ const adminNav = [
   { label:'Attendance',   path:'/admin/attendance',    icon:'CalendarCheck' },
   { label:'Teams',        path:'/admin/teams',         icon:'MessagesSquare' },
   { label:'Revenue',      path:'/admin/revenue',       icon:'IndianRupee' },
+  { label:'Project Fees',  path:'/admin/project-fees',  icon:'CreditCard' },
   { label:'Reports',      path:'/admin/reports',       icon:'BarChart3' },
   { label:'Certificates', path:'/admin/certificates',  icon:'Award' },
   { label:'Support',      path:'/admin/tickets',       icon:'LifeBuoy' },

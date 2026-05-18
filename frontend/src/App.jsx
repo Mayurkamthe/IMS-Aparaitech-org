@@ -28,6 +28,7 @@ import Certificates   from './pages/admin/Certificates'
 import AdminSettings  from './pages/admin/Settings'
 import Domains        from './pages/admin/Domains'
 import Revenue        from './pages/admin/Revenue'
+import ProjectFees    from './pages/admin/ProjectFees'
 
 import InternDashboard  from './pages/intern/Dashboard'
 import MyTasks          from './pages/intern/MyTasks'
@@ -37,6 +38,7 @@ import MyAttendance     from './pages/intern/MyAttendance'
 import MyProfile        from './pages/intern/MyProfile'
 import MyCertificates   from './pages/intern/MyCertificates'
 import MyTickets        from './pages/intern/MyTickets'
+import MyPayments       from './pages/intern/MyPayments'
 
 import Loader from './components/common/Loader'
 import toast  from 'react-hot-toast'
@@ -106,6 +108,7 @@ export default function App() {
           <Route path="settings"   element={<AdminSettings />} />
           <Route path="domains"    element={<Domains />} />
           <Route path="revenue"    element={<Revenue />} />
+          <Route path="project-fees" element={<ProjectFees />} />
         </Route>
 
         <Route path="/intern" element={<ProtectedRoute role="intern"><InternLayout /></ProtectedRoute>}>
@@ -117,6 +120,7 @@ export default function App() {
           <Route path="profile"      element={<MyProfile />} />
           <Route path="certificates" element={<MyCertificates />} />
           <Route path="tickets"      element={<MyTickets />} />
+          <Route path="payments"     element={<MyPayments />} />
         </Route>
 
         <Route path="/" element={<Navigate to={token ? (user?.role === 'admin' ? '/admin' : '/intern') : '/login'} replace />} />
